@@ -522,7 +522,7 @@ class GlobalBindings {
             type: 'chat-message',
             user: sender.__ui,
             channel: channels.length > 0,
-            message: anchorme({input: sanitize(message), options: anchormeOptions})
+            message: sanitize(anchorme({input: sanitize(message), options: anchormeOptions}))
           })
         })
 
@@ -922,13 +922,13 @@ class GlobalBindings {
         if (target.users) { // Channel
           this.log.push({
             type: 'chat-message-self',
-            message: anchorme({input: sanitize(message), options: anchormeOptions}),
+            message: sanitize(anchorme({input: sanitize(message), options: anchormeOptions})),
             channel: target
           })
         } else { // User
           this.log.push({
             type: 'chat-message-self',
-            message: anchorme({input: sanitize(message), options: anchormeOptions}),
+            message: sanitize(anchorme({input: sanitize(message), options: anchormeOptions})),
             user: target
           })
         }

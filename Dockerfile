@@ -9,6 +9,7 @@ RUN git config --global url."https://github.com/".insteadOf ssh://git@github.com
     && git config --global --add url."https://github.com/".insteadOf git@github.com:
 COPY --chown=node:node package.json package-lock.json webpack.config.js ./
 COPY --chown=node:node patches ./patches
+COPY --chown=node:node build ./build
 COPY --chown=node:node app ./app
 COPY --chown=node:node loc ./loc
 COPY --chown=node:node themes ./themes
@@ -22,9 +23,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && useradd --system --uid 10001 --create-home mumble-web
 WORKDIR /app
 COPY --from=build --chown=mumble-web:mumble-web /app/dist ./dist
+RUN install -d -o mumble-web -g mumble-web /run/mumble-web \
+    && rm /app/dist/config.local.js \
+    && ln -s /run/mumble-web/config.local.js /app/dist/config.local.js
 COPY docker/configure.py ./configure.py
 COPY --chmod=755 docker/entrypoint.sh /usr/local/bin/mumble-web-entrypoint
 USER mumble-web
+ENV PYTHONDONTWRITEBYTECODE=1
 EXPOSE 8080
 HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
   CMD python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/', timeout=3)"

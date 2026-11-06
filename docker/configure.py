@@ -36,4 +36,4 @@ script = """// Generated from public WEB_* settings at container startup.
   config.defaults.matrix = false;
 })();
 """.replace("SETTINGS", json.dumps(settings, ensure_ascii=True))
-Path("/app/dist/config.local.js").write_text(script, encoding="utf-8")
+Path("/run/mumble-web/config.local.js").write_text(script, encoding="utf-8")

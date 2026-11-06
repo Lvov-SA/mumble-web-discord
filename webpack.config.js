@@ -1,5 +1,7 @@
 var theme = '../themes/MetroMumbleLight'
 var path = require('path');
+var webpack = require('webpack');
+var extractLoader = path.resolve(__dirname, 'build/extract-loader.cjs');
 
 module.exports = {
   mode: 'development',
@@ -15,6 +17,7 @@ module.exports = {
   devtool: "cheap-source-map",
   output: {
     path: path.join(__dirname, 'dist'),
+    publicPath: '',
     chunkFilename: '[chunkhash].js',
     filename: '[name].js'
   },
@@ -36,16 +39,26 @@ module.exports = {
         use: [
           {
             loader: 'file-loader',
-            options: { 'name': '[name].[ext]' }
+            options: { name: '[name].[ext]', esModule: false }
           },
           {
-            loader: "extract-loader"
+            loader: extractLoader
           },
           {
             loader: 'html-loader',
             options: {
-              attrs: ['img:src', 'link:href'],
-              root: theme
+              esModule: false,
+              minimize: false,
+              sources: {
+                list: [
+                  { tag: 'img', attribute: 'src', type: 'src' },
+                  { tag: 'link', attribute: 'href', type: 'src' },
+                  { tag: 'meta', attribute: 'content', type: 'src',
+                    filter: (tag, attribute, attributes) => attributes.some(
+                      attr => attr.name === 'name' && attr.value === 'msapplication-config') }
+                ]
+              },
+              preprocessor: content => content.replace(/src="\/svg\//g, `src="${theme}/svg/`)
             }
           }
         ]
@@ -53,20 +66,20 @@ module.exports = {
       {
         test: /\.css$/,
         use: [
-          'file-loader',
-          'extract-loader',
-          'css-loader'
+          { loader: 'file-loader', options: { esModule: false } },
+          extractLoader,
+          { loader: 'css-loader', options: { esModule: false } }
         ]
       },
       {
         test: /\.scss$/,
         use: [
-          'file-loader?name=[hash].css',
-          'extract-loader',
-          'css-loader',
+          { loader: 'file-loader', options: { name: '[contenthash].css', esModule: false } },
+          extractLoader,
+          { loader: 'css-loader', options: { esModule: false } },
           {
             loader: 'sass-loader',
-            options: { implementation: require('sass') }
+            options: { implementation: require('sass'), api: 'legacy' }
           }
         ]
       },
@@ -74,8 +87,8 @@ module.exports = {
         type: 'javascript/auto',
         test: /manifest\.json$|\.xml$/,
         use: [
-          'file-loader',
-          'extract-loader',
+          { loader: 'file-loader', options: { esModule: false } },
+          extractLoader,
           {
             loader: 'regexp-replace-loader',
             options: {
@@ -92,7 +105,7 @@ module.exports = {
       {
         test: /\.(svg|png|ico)$/,
         use: [
-          'file-loader'
+          { loader: 'file-loader', options: { esModule: false } }
         ]
       },
       {
@@ -108,5 +121,23 @@ module.exports = {
       }
     ]
   },
+  resolve: {
+    fallback: {
+      crypto: false,
+      fs: false,
+      stream: require.resolve('stream-browserify'),
+      buffer: require.resolve('buffer/'),
+      util: require.resolve('util/'),
+      events: require.resolve('events/'),
+      assert: require.resolve('assert/'),
+      url: require.resolve('url/'),
+      path: require.resolve('path-browserify'),
+      process: require.resolve('process/browser')
+    }
+  },
+  plugins: [new webpack.ProvidePlugin({
+    Buffer: ['buffer', 'Buffer'],
+    process: 'process/browser'
+  })],
   target: 'web'
 }

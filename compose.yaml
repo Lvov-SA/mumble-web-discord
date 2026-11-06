@@ -18,6 +18,15 @@ services:
           - mumble-web
     security_opt:
       - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+      - /run/mumble-web:rw,noexec,nosuid,size=1m,uid=10001,gid=10001,mode=0700
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 2
 
 networks:
   caddy-proxy:

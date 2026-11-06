@@ -41,7 +41,6 @@ class WorkerBasedMumbleConnector {
 
   _call (id, method, payload, transfer) {
     let reqId = this._reqId++
-    console.debug(method, id, payload)
     this._postMessage({
       clientId: id.client,
       channelId: id.channel,
@@ -84,7 +83,6 @@ class WorkerBasedMumbleConnector {
   _onMessage (ev) {
     let data = ev.data
     if (data.reqId != null) {
-      console.debug(data)
       let { reqId, result, error } = data
       let [ resolve, reject ] = this._requests[reqId]
       delete this._requests[reqId]
@@ -94,7 +92,6 @@ class WorkerBasedMumbleConnector {
         reject(error)
       }
     } else if (data.clientId != null) {
-      console.debug(data)
       let client = this._client(data.clientId)
 
       let target
@@ -364,9 +361,11 @@ class WorkerBasedMumbleUser extends EventEmitter {
     }
     if (name === 'texture') {
       if (value) {
-        let buf = ByteBuffer.wrap(value.buffer)
-        buf.offset = value.offset
-        buf.limit = value.limit
+        let buf = ByteBuffer.wrap(value instanceof Uint8Array ? value : value.buffer)
+        if (!(value instanceof Uint8Array)) {
+          buf.offset = value.offset
+          buf.limit = value.limit
+        }
         value = buf
       }
     }
