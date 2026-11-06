@@ -61,3 +61,28 @@ test('protobuf output matches the Mumble wire format', () => {
   const wire = type.encode(type.fromObject({ username: 'A', opus: true })).finish()
   assert.equal(Buffer.from(wire).toString('hex'), '0a01412801')
 })
+
+test('avatars and hashes survive subsequent packets reusing the receive buffer', async () => {
+  const encoder = new Encoder()
+  const frames = []
+  encoder.on('data', frame => frames.push(frame))
+  const texture = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])
+  const hash = Buffer.alloc(20, 7)
+  encoder.write({ name: 'UserState', payload: { session: 1, texture, texture_hash: hash } })
+  encoder.end({ name: 'TextMessage', payload: { message: 'subsequent packet overwrites decoder memory' } })
+
+  for (const chunks of [frames, [Buffer.concat(frames)]]) {
+    const decoder = new Decoder()
+    const messages = []
+    decoder.on('data', message => messages.push(message))
+    const finished = new Promise((resolve, reject) => {
+      decoder.on('finish', resolve)
+      decoder.on('error', reject)
+    })
+    for (const chunk of chunks) decoder.write(chunk)
+    decoder.end()
+    await finished
+    assert.deepEqual(Buffer.from(messages[0].payload.texture), texture)
+    assert.deepEqual(Buffer.from(messages[0].payload.texture_hash), hash)
+  }
+})

@@ -22,9 +22,11 @@ diff --git a/node_modules/mumble-streams/lib/data.js b/node_modules/mumble-strea
 +    }
 +  });
 +  var encoded = type.encode(type.fromObject(payload || {})).finish();
-@@ -78,1 +93,4 @@
+@@ -78,1 +93,6 @@
 -	return new messages[name].decode(payload || {});
 +  var type = messages[name];
 +  // Keep absent optional fields absent: the client interprets presence as an
 +  // update. Repeated fields must remain arrays, including when empty.
-+  return type.toObject(type.decode(payload || Buffer.alloc(0)), { arrays: true });
++  // Decoded bytes are views into the input. The framing decoder reuses its
++  // buffer, so give protobuf owned memory before retaining avatars and hashes.
++  return type.toObject(type.decode(Buffer.from(payload || [])), { arrays: true });

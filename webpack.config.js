@@ -58,7 +58,16 @@ module.exports = {
                       attr => attr.name === 'name' && attr.value === 'msapplication-config') }
                 ]
               },
-              preprocessor: content => content.replace(/src="\/svg\//g, `src="${theme}/svg/`)
+              // html-loader treats script bodies as raw text, including
+              // Knockout's text/html templates. Expose their markup during
+              // asset discovery, then restore script tags for Knockout.
+              preprocessor: content => content
+                .replace(/<script\b([^>]*\btype="text\/html"[^>]*)>([\s\S]*?)<\/script>/g,
+                  '<mumble-build-template$1>$2</mumble-build-template>')
+                .replace(/src="\/svg\//g, `src="${theme}/svg/`),
+              postprocessor: content => content
+                .replace(/<mumble-build-template\b/g, '<script')
+                .replace(/<\/mumble-build-template>/g, '</script>')
             }
           }
         ]
