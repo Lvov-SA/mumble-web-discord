@@ -4,7 +4,7 @@ import url from 'url'
 import ByteBuffer from 'bytebuffer'
 import MumbleClient from 'mumble-client'
 import WorkerBasedMumbleConnector from './worker-client'
-import BufferQueueNode from 'web-audio-buffer-queue'
+import BufferQueueNode from './audio'
 import mumbleConnect from 'mumble-client-websocket'
 import audioContext from 'audio-context'
 import ko from 'knockout'
@@ -457,6 +457,7 @@ class GlobalBindings {
       // Note: This call needs to be delayed until the user has interacted with
       // the page in some way (which at this point they have), see: https://goo.gl/7K7WLu
       let ctx = audioContext()
+      ctx.resume().catch(err => console.error('Failed to resume audio', err))
       if (!this.webrtc) {
         this.fallbackConnector.setSampleRate(ctx.sampleRate)
       }
@@ -1071,6 +1072,12 @@ window.mumbleUi = ui
 function initializeUI () {
   var queryParams = url.parse(document.location.href, true).query
   queryParams = Object.assign({}, window.mumbleWebConfig.defaults, queryParams)
+  if (window.mumbleWebConfig.lockConnection) {
+    // A single-server installation only asks visitors for their credentials.
+    for (const key of ['address', 'port', 'token', 'channelName', 'webrtc', 'joinDialog', 'matrix']) {
+      queryParams[key] = window.mumbleWebConfig.defaults[key]
+    }
+  }
   var useJoinDialog = queryParams.joinDialog
   if (queryParams.matrix) {
     useJoinDialog = true

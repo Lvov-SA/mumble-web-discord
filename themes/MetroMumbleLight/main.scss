@@ -1,54 +1,54 @@
-$black: #000 !default
-$darkgray: #888 !default
-$gray: #a9a9a9 !default
-$lightgray: #d3d3d3 !default
-$bg-color: #eee !default
-$white: #fff !default
+$black: #000 !default;
+$darkgray: #888 !default;
+$gray: #a9a9a9 !default;
+$lightgray: #d3d3d3 !default;
+$bg-color: #eee !default;
+$white: #fff !default;
 
-$font-color: $black !default
-$font-family: "Segoe UI", Frutiger, "Frutiger Linotype", "Dejavu Sans", "Helvetica Neue", Arial, sans-serif !default
-$font-disabled-color: $gray !default
-$panel-bg-color: $white !default
-$panel-border-color: $lightgray !default
-$channel-tree-color: $lightgray !default
-$channel-hover-bg-color: $lightgray !default
-$channel-selected-bg-color: lightblue !default
-$channel-selected-border-color: $darkgray !default
-$tooltip-border-color: $darkgray !default
-$chat-channel-color: orange !default
-$chat-user-color: green !default
-$chat-input-color: $font-color !default
-$mic-volume-border-color: $black !default
-$talk-outline-color: green !default
-$whisper-outline-color: purple !default
-$shout-outline-color: cyan !default
+$font-color: $black !default;
+$font-family: "Segoe UI", Frutiger, "Frutiger Linotype", "Dejavu Sans", "Helvetica Neue", Arial, sans-serif !default;
+$font-disabled-color: $gray !default;
+$panel-bg-color: $white !default;
+$panel-border-color: $lightgray !default;
+$channel-tree-color: $lightgray !default;
+$channel-hover-bg-color: $lightgray !default;
+$channel-selected-bg-color: lightblue !default;
+$channel-selected-border-color: $darkgray !default;
+$tooltip-border-color: $darkgray !default;
+$chat-channel-color: orange !default;
+$chat-user-color: green !default;
+$chat-input-color: $font-color !default;
+$mic-volume-border-color: $black !default;
+$talk-outline-color: green !default;
+$whisper-outline-color: purple !default;
+$shout-outline-color: cyan !default;
 
-$toolbar-hover-bg-color: $lightgray !default
-$toolbar-hover-border-color: $gray !default
-$toolbar-active-bg-color: $white !default
-$toolbar-active-border-color: $toolbar-hover-bg-color !default
-$toolbar-divider-color: $lightgray !default
-$dialog-header-color: $white !default
-$dialog-header-bg-color: $darkgray !default
-$dialog-header-border-bottom-color: $gray !default
-$dialog-bg-color: $bg-color !default
-$dialog-border-color: $darkgray !default
-$dialog-color: $font-color !default
-$dialog-button-border-color: $darkgray !default
-$dialog-button-bg-color: $white !default
-$dialog-button-color: $dialog-color !default
-$dialog-input-border-color: $darkgray !default
-$dialog-input-bg-color: $white !default
-$dialog-input-color: $dialog-color !default
-$context-menu-bg-color: $bg-color !default
-$context-menu-border-color: $panel-border-color !default
-$context-menu-hover-bg-color: $toolbar-hover-bg-color !default
+$toolbar-hover-bg-color: $lightgray !default;
+$toolbar-hover-border-color: $gray !default;
+$toolbar-active-bg-color: $white !default;
+$toolbar-active-border-color: $toolbar-hover-bg-color !default;
+$toolbar-divider-color: $lightgray !default;
+$dialog-header-color: $white !default;
+$dialog-header-bg-color: $darkgray !default;
+$dialog-header-border-bottom-color: $gray !default;
+$dialog-bg-color: $bg-color !default;
+$dialog-border-color: $darkgray !default;
+$dialog-color: $font-color !default;
+$dialog-button-border-color: $darkgray !default;
+$dialog-button-bg-color: $white !default;
+$dialog-button-color: $dialog-color !default;
+$dialog-input-border-color: $darkgray !default;
+$dialog-input-bg-color: $white !default;
+$dialog-input-color: $dialog-color !default;
+$context-menu-bg-color: $bg-color !default;
+$context-menu-border-color: $panel-border-color !default;
+$context-menu-hover-bg-color: $toolbar-hover-bg-color !default;
 
-$tooltip-bg-color: $panel-bg-color !default
-$channels-bg-color: $panel-bg-color !default
-$channels-border-color: $panel-border-color !default
-$chat-bg-color: $panel-bg-color !default
-$chat-border-color: $panel-border-color !default
+$tooltip-bg-color: $panel-bg-color !default;
+$channels-bg-color: $panel-bg-color !default;
+$channels-border-color: $panel-border-color !default;
+$chat-bg-color: $panel-bg-color !default;
+$chat-border-color: $panel-border-color !default;
 
 html, body {
   background-color: $bg-color;
@@ -477,6 +477,12 @@ form {
 /****************/
 /* Minimal view */
 /****************/
+
+/* The Discord shell is only shown by the Discord theme. */
+.server-rail, .workspace-header, .sidebar-label, .sidebar-empty,
+.voice-panel, .chat-welcome, .composer-icon, .send-message-button {
+  display: none;
+}
 
 .minimal .toolbar-horizontal ~ .channel-root-container {
   width: calc(98% - 6px);

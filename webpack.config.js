@@ -64,7 +64,10 @@ module.exports = {
           'file-loader?name=[hash].css',
           'extract-loader',
           'css-loader',
-          'sass-loader'
+          {
+            loader: 'sass-loader',
+            options: { implementation: require('sass') }
+          }
         ]
       },
       {

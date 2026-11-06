@@ -3,7 +3,7 @@
   "version": "0.5.1",
   "description": "An HTML5 Mumble client.",
   "scripts": {
-    "build": "webpack && [ -f dist/config.local.js ] || cp app/config.local.js dist/",
+    "build": "webpack && node -e \"const fs = require('fs'); if (!fs.existsSync('dist/config.local.js')) fs.copyFileSync('app/config.local.js', 'dist/config.local.js')\"",
     "watch": "webpack --watch",
     "prepare": "rm -rf dist && npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -45,7 +45,6 @@
     "mumble-client": "github:johni0702/mumble-client#f73a08b",
     "mumble-client-codecs-browser": "^1.2.0",
     "mumble-client-websocket": "github:johni0702/mumble-client-websocket#5b0ed8d",
-    "node-sass": "^4.14.1",
     "patch-package": "^6.2.1",
     "raw-loader": "^4.0.2",
     "regexp-replace-loader": "1.0.1",
@@ -56,9 +55,10 @@
     "transform-loader": "^0.2.4",
     "voice-activity-detection": "github:johni0702/voice-activity-detection#9f8bd90",
     "web-audio-buffer-queue": "^1.1.0",
-    "webpack": "^4.44.2",
+    "webpack": "^4.47.0",
     "webpack-cli": "^3.3.12",
-    "worker-loader": "^2.0.0"
+    "worker-loader": "^2.0.0",
+    "sass": "1.77.8"
   },
   "optionalDependencies": {}
 }

@@ -1,0 +1,5 @@
+# Append this block to the existing ~/lamast/Caddyfile.
+voice.calcfit.ru {
+	encode zstd gzip
+	reverse_proxy mumble-web:8080
+}

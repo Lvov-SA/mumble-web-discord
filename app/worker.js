@@ -137,7 +137,7 @@ import 'subworkers'
       // We want to do as little on the UI thread as possible, so do resampling here as well
       var resampler = new Resampler({
         unsafe: true,
-        type: Resampler.Type.ZERO_ORDER_HOLD,
+        type: Resampler.Type.SINC_FASTEST,
         ratio: sampleRate / 48000
       })
 
@@ -145,7 +145,7 @@ import 'subworkers'
       stream.on('data', (data) => {
         // store target so we can pass it on after resampling
         target = data.target
-        resampler.write(Buffer.from(data.pcm.buffer))
+        resampler.write(Buffer.from(data.pcm.buffer, data.pcm.byteOffset, data.pcm.byteLength))
       }).on('end', () => {
         resampler.end()
       })

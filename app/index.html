@@ -13,7 +13,8 @@
     <meta name="apple-mobile-web-app-title" content="Mumble">
     <meta name="application-name" content="Mumble">
     <meta name="msapplication-config" content="${require('./favicon/browserconfig.xml')}">
-    <meta name="theme-color" content="#ffffff">
+    <meta name="theme-color" content="#1e1f22">
+    <title>Mumble — Voice & Chat</title>
 
     <script src="config.js"></script>
     <script src="config.local.js"></script>
@@ -26,11 +27,29 @@
     </div>
     <div id="container" style="display: none" data-bind="visible: true,
                                                          css: { minimal: minimalView }">
+      <nav class="server-rail" aria-label="Server navigation">
+        <button class="server-icon" title="Connect to a Mumble server" aria-label="Connect to a Mumble server" data-bind="click: connectDialog.show">m</button>
+        <span class="rail-divider"></span>
+        <button class="server-add" title="Connect to another server" aria-label="Connect to another server" data-bind="click: connectDialog.show">+</button>
+        <button class="rail-settings" title="Settings" aria-label="Settings" data-bind="click: openSettings">⚙</button>
+      </nav>
+      <header class="workspace-header">
+        <div class="workspace-name"><span class="brand-mark">M</span><span data-bind="text: root() ? root().name() : 'Mumble'">Mumble</span></div>
+        <div class="conversation-heading"><span class="heading-hash">#</span><strong data-bind="text: thisUser() ? thisUser().channel().name() : 'general'">general</strong><span class="heading-divider"></span><span class="heading-description">A place to talk. A place to belong.</span></div>
+      </header>
+      <div class="sidebar-label">VOICE CHANNELS <span>⌄</span></div>
+      <div class="sidebar-empty" data-bind="visible: !root()"><span class="empty-voice-icon">♫</span><strong>Your people are one click away.</strong><p>Connect to a server to see its voice channels.</p><button data-bind="click: connectDialog.show">Connect to server</button></div>
+      <div class="voice-panel" data-bind="css: { 'is-connected': !!thisUser() }">
+        <div class="voice-state"><span class="status-dot"></span><strong data-bind="text: thisUser() ? 'Voice connected' : 'Not connected'">Not connected</strong></div>
+        <div class="voice-detail" data-bind="text: thisUser() ? thisUser().channel().name() : 'Ready when you are'"></div>
+        <div class="profile-line"><span class="profile-avatar" data-bind="text: thisUser() ? thisUser().name().slice(0, 1).toUpperCase() : 'M'"></span><div><strong data-bind="text: thisUser() ? thisUser().name() : 'Welcome, friend'"></strong><small data-bind="text: thisUser() ? 'Online' : 'Offline'"></small></div></div>
+      </div>
       <!-- ko with: connectDialog --> 
       <div class="connect-dialog dialog" data-bind="visible: visible() && !joinOnly()">
           <div id="connect-dialog_title" class="dialog-header">
             Connect to Server
           </div>
+          <p class="connect-intro">Your next conversation starts here. Join your Mumble server and make yourself at home.</p>
           <form data-bind="submit: connect">
             <table>
                 <tr data-bind="if: $root.config.connectDialog.address">
@@ -43,11 +62,11 @@
                 </tr>
                 <tr data-bind="if: $root.config.connectDialog.username">
                   <td id="connect-dialog_input_username">Username</td>
-                  <td><input id="username" type="text" data-bind="value: username" required></td>
+                  <td><input id="username" type="text" autocomplete="username" data-bind="value: username" required></td>
                 </tr>
                 <tr data-bind="if: $root.config.connectDialog.password">
                   <td id="connect-dialog_input_password">Password</td>
-                  <td><input id="password" type="password" data-bind="value: password"></td>
+                  <td><input id="password" type="password" autocomplete="current-password" data-bind="value: password"></td>
                 </tr>
                 <tr data-bind="if: $root.config.connectDialog.token">
                   <td id="connect-dialog_input_tokens">Tokens</td>
@@ -58,8 +77,8 @@
                 <tr data-bind="if: $root.config.connectDialog.token">
                       <td></td>
                       <td>
-                        <button id="connect-dialog_controls_remove" class="dialog-submit" type="button" data-bind="enable: selectedTokens().length > 0, click: removeSelectedTokens()">Remove</button>
-                        <button id="connect-dialog_controls_add" class="dialog-submit" type="button" data-bind="enable: tokenToAdd().length > 0, click: addToken()">Add</button>
+                        <button id="connect-dialog_controls_remove" class="dialog-submit" type="button" data-bind="enable: selectedTokens().length > 0, click: removeSelectedTokens">Remove</button>
+                        <button id="connect-dialog_controls_add" class="dialog-submit" type="button" data-bind="enable: tokenToAdd().length > 0, click: addToken">Add</button>
                      </td>
                 </tr>
                <tr data-bind="if: $root.config.connectDialog.token, visible: tokens().length > 0">
@@ -239,6 +258,7 @@
                       <option value="cont">Continuous</option>
                       <option value="vad">Voice Activity</option>
                       <option value="ptt">Push To Talk</option>
+                    </select>
                   </td>
                 </tr>
                 <tr data-bind="visible: voiceMode() == 'vad'">
@@ -300,6 +320,7 @@
                       <option value="linked_channel">Linked Channels</option>
                       <option value="minimal_only">Minimal View</option>
                       <option value="never">Never</option>
+                    </select>
                   </td>
                 </tr>
                 <tr>
@@ -319,7 +340,7 @@
       <img class="avatar-view" data-bind="visible: avatarView, attr: { src: avatarView },
                                           click: function () { avatarView(null) }"></img>
       <!-- ko with: userContextMenu -->
-      <ul class="context-menu user-context-menu" data-bind="if: target,
+      <ul class="context-menu user-context-menu" data-bind="if: target, visible: target,
                                           style: { left: posX() + 'px',
                                                    top:  posY() + 'px' }">
 
@@ -376,7 +397,7 @@
         </li>
         <!-- /ko -->
         <li data-bind="css: { disabled: !canChangeAvatar() }, visible: texture,
-                       click: removeAvatar",
+                       click: removeAvatar"
             class="reset-avatar">
           Reset Avatar
         </li>
@@ -418,7 +439,7 @@
       </ul>
       <!-- /ko -->
       <!-- ko with: channelContextMenu -->
-      <ul class="context-menu channel-context-menu" data-bind="if: target,
+      <ul class="context-menu channel-context-menu" data-bind="if: target, visible: target,
                                           style: { left: posX() + 'px',
                                                    top:  posY() + 'px' }">
 
@@ -527,6 +548,13 @@
                       title="Open Soure Code" alt="Open Source Code">
       </div>
       <div class="chat">
+        <div class="chat-welcome" data-bind="visible: !thisUser()">
+          <div class="welcome-hash">#</div>
+          <h1>Welcome to your space.</h1>
+          <p>Good conversations start with a hello.<br>Connect to your server to join the voice channels and chat.</p>
+          <button class="welcome-connect" data-bind="click: connectDialog.show">Let's talk <span>→</span></button>
+          <div class="welcome-tip">YOUR VOICE. YOUR SERVER. YOUR COMMUNITY.</div>
+        </div>
         <script type="text/html" id="log-generic">
           <span data-bind="text: value"></span>
         </script>
@@ -561,11 +589,13 @@
             <!-- /ko -->
           </div>
         </div>
-        <form data-bind="submit: submitMessageBox">
-          <textarea id="message-box" row=1 data-bind="
-              attr: { placeholder: messageBoxHint }, 
+        <form class="message-composer" data-bind="submit: submitMessageBox">
+          <span class="composer-icon" aria-hidden="true">#</span>
+          <textarea id="message-box" rows="1" aria-label="Message" data-bind="
+              enable: !!thisUser(), attr: { placeholder: thisUser() ? messageBoxHint() : 'Connect to a server to start chatting' },
               textInput: messageBox, 
               event: {keypress: submitOnEnter}"></textarea>
+          <button class="send-message-button" type="submit" title="Send message" aria-label="Send message" data-bind="enable: !!thisUser()">➤</button>
         </form>
       </div>
       <script type="text/html" id="channel">
@@ -669,10 +699,10 @@
         <!-- /ko -->
         <!-- /ko -->
       </script>
-      <div class="channel-root-container" data-bind="if: root, visible: !minimalView()">
+      <div class="channel-root-container" data-bind="if: root, visible: root() && !minimalView()">
         <div class="channel-root" data-bind="template: {name: 'channel', data: root}"></div>
       </div>
-      <div class="channel-root-container" data-bind="if: thisUser, visible: minimalView()">
+      <div class="channel-root-container" data-bind="if: thisUser, visible: thisUser() && minimalView()">
         <div class="channel-root" data-bind="template: {name: 'channel', data: thisUser().channel}"></div>
       </div>
     </div>

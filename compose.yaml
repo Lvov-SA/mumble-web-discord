@@ -1,0 +1,25 @@
+services:
+  mumble-web:
+    image: mumble-web-discord:local
+    build: .
+    restart: unless-stopped
+    environment:
+      MUMBLE_SERVER: ${MUMBLE_SERVER:?Set MUMBLE_SERVER in .env}
+      WEB_SIMPLE_LOGIN: ${WEB_SIMPLE_LOGIN:-true}
+      WEB_ADDRESS: ${WEB_ADDRESS:-}
+      WEB_PORT: ${WEB_PORT:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    expose:
+      - "8080"
+    networks:
+      caddy-proxy:
+        aliases:
+          - mumble-web
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  caddy-proxy:
+    external: true
+    name: ${CADDY_NETWORK:-caddy-proxy}

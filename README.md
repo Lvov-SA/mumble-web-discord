@@ -1,5 +1,7 @@
 # mumble-web
 
+Запуск этого форка через Docker: [инструкция на русском](DEPLOYMENT.md).
+
 mumble-web is an HTML5 [Mumble] client for use in modern browsers.
 
 A live demo is running [here](https://voice.johni0702.de/?address=voice.johni0702.de&port=443/demo) (or [without WebRTC](https://voice.johni0702.de/?address=voice.johni0702.de&port=443/demo&webrtc=false)).
@@ -16,6 +18,28 @@ Performance is expected to be less reliable (especially on low-end devices) than
 
 Quite a few features, most noticeably all
 administrative functionallity, are still missing.
+
+### Discord-style interface (this fork)
+
+The default `Discord` theme adds a dark server rail, channel sidebar, voice status,
+chat composer and responsive dialogs. Select it explicitly with `?theme=discord`;
+the original `?theme=light` and `?theme=dark` themes remain available.
+
+WebRTC is disabled by default in this fork for use with `websockify`. The existing
+Docker entrypoint connects to the Mumble address in `MUMBLE_SERVER`; HTTPS/WSS
+must still be provided by your reverse proxy. Set `?webrtc=true` only when using
+`mumble-web-proxy` with WebRTC configured.
+
+Build with Node.js 22:
+
+```sh
+npm ci
+npm run build
+```
+
+Serve the generated `dist` directory through your web server. The Sass build uses
+Dart Sass instead of the obsolete native `node-sass` dependency. Server details
+and theme defaults can be overridden in `dist/config.local.js` after building.
 
 ### Installing
 
@@ -123,7 +147,7 @@ The `app/config.js` file contains default values and descriptions for all config
 You can overwrite those by editing the `config.local.js` file within your `dist` folder. Make sure to back up and restore the file whenever you update to a new version.
 
 ### Themes
-The default theme of mumble-web tries to mimic the excellent [MetroMumble]Light theme.
+The default theme in this fork is `Discord`. The original light theme tries to mimic the excellent [MetroMumble]Light theme.
 mumble-web also includes a dark version, named MetroMumbleDark, which is heavily inspired by [MetroMumble]'s dark version.
 
 To select a theme other than the default one, append a `theme=dark` query parameter (where `dark` is the name of the theme) when accessing the mumble-web page.

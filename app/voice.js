@@ -2,7 +2,7 @@ import { Writable } from 'stream'
 import MicrophoneStream from 'microphone-stream'
 import audioContext from 'audio-context'
 import keyboardjs from 'keyboardjs'
-import vad from 'voice-activity-detection'
+import { initAudio, createMicrophoneNode } from './audio'
 import DropStream from 'drop-stream'
 import { WorkerBasedMumbleClient } from './worker-client'
 
@@ -106,33 +106,38 @@ export class VADVoiceHandler extends VoiceHandler {
   constructor (client, settings) {
     super(client, settings)
     let level = settings.vadLevel
-    const self = this
-    this._vad = vad(audioContext(), theUserMedia, {
-      onVoiceStart () {
-        console.log('vad: start')
-        self._active = true
-      },
-      onVoiceStop () {
-        console.log('vad: stop')
-        self._stopOutbound()
-        self._active = false
-      },
-      onUpdate (val) {
-        self._level = val
-        self.emit('level', val)
-      },
-      noiseCaptureDuration: 0,
-      minNoiseLevel: level,
-      maxNoiseLevel: level
-    })
+    this._vadThreshold = level
+    this._activity = 0
+    this._source = audioContext().createMediaStreamSource(theUserMedia)
+    this._analyser = audioContext().createAnalyser()
+    this._analyser.fftSize = 1024
+    this._analyser.smoothingTimeConstant = 0.2
+    this._source.connect(this._analyser)
+    this._frequencies = new Uint8Array(this._analyser.frequencyBinCount)
     // Need to keep a backlog of the last ~150ms (dependent on sample rate)
     // because VAD will activate with ~125ms delay
     this._backlog = []
     this._backlogLength = 0
-    this._backlogLengthMin = 1024 * 6 * 4 // vadBufferLen * (vadDelay + 1) * bytesPerSample
+    this._backlogLengthMin = Math.ceil(audioContext().sampleRate * 0.15) * 4
   }
 
   _write (data, _, callback) {
+    // Follow captured PCM blocks rather than a second ScriptProcessor clock.
+    this._analyser.getByteFrequencyData(this._frequencies)
+    const binWidth = audioContext().sampleRate / this._analyser.fftSize
+    const firstBin = Math.round(85 / binWidth)
+    const lastBin = Math.round(255 / binWidth)
+    let average = 0
+    for (let bin = firstBin; bin < lastBin; bin++) average += this._frequencies[bin] / 255
+    average /= Math.max(1, lastBin - firstBin)
+    const step = data.length / 4 / audioContext().sampleRate / (1024 / 48000)
+    this._activity = Math.max(0, Math.min(60,
+      this._activity + (average >= this._vadThreshold ? step : -step)))
+    const active = this._activity > 5
+    if (this._active && !active) this._stopOutbound()
+    this._active = active
+    this._level = Math.max(0, average - this._vadThreshold) / Math.max(0.001, 1 - this._vadThreshold)
+    this.emit('level', this._level)
     if (this._active && !this._mute) {
       if (this._backlog.length > 0) {
         for (let oldData of this._backlog) {
@@ -144,10 +149,10 @@ export class VADVoiceHandler extends VoiceHandler {
       this._getOrCreateOutbound().write(data, callback)
     } else {
       // Make sure we always keep the backlog filled if we're not (yet) talking
-      this._backlog.push(data)
+      this._backlog.push(Buffer.from(data))
       this._backlogLength += data.length
       // Check if we can discard the oldest element without becoming too short
-      if (this._backlogLength - this._backlog[0].length > this._backlogLengthMin) {
+      while (this._backlogLength - this._backlog[0].length > this._backlogLengthMin) {
         this._backlogLength -= this._backlog.shift().length
       }
       callback()
@@ -156,7 +161,8 @@ export class VADVoiceHandler extends VoiceHandler {
 
   _final (callback) {
     super._final(e => {
-      this._vad.destroy()
+      this._source.disconnect()
+      this._analyser.disconnect()
       callback(e)
     })
   }
@@ -165,11 +171,17 @@ export class VADVoiceHandler extends VoiceHandler {
 var theUserMedia = null
 
 export function initVoice (onData) {
-  return window.navigator.mediaDevices.getUserMedia({ audio: true }).then((userMedia) => {
+  return window.navigator.mediaDevices.getUserMedia({ audio: true }).then(async (userMedia) => {
     theUserMedia = userMedia
-    var micStream = new MicrophoneStream(userMedia, { objectMode: true, bufferSize: 1024 })
+    await initAudio()
+    const capture = createMicrophoneNode(userMedia, onData)
+    if (capture) return userMedia
+    var micStream = new MicrophoneStream(userMedia, {
+      context: audioContext(), objectMode: true, bufferSize: 1024
+    })
     micStream.on('data', data => {
-      onData(Buffer.from(data.getChannelData(0).buffer))
+      const samples = new Float32Array(data.getChannelData(0))
+      onData(Buffer.from(samples.buffer))
     })
     return userMedia
   })

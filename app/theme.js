@@ -3,6 +3,8 @@ import url from 'url'
 var queryParams = url.parse(document.location.href, true).query
 var theme = queryParams.theme || window.localStorage.getItem('mumble.theme')
 var themes = {
+  'Discord': 'Discord',
+  'discord': 'Discord',
   'MetroMumbleLight': 'MetroMumbleLight',
   'MetroMumbleDark': 'MetroMumbleDark',
   'light': 'MetroMumbleLight',
@@ -12,6 +14,10 @@ theme = themes[theme] || window.mumbleWebConfig.defaults.theme
 window.theme = theme
 
 var [loadingTheme, mainTheme] = {
+  'Discord': [
+    require('../themes/Discord/loading.scss'),
+    require('../themes/Discord/main.scss')
+  ],
   'MetroMumbleLight': [
     require('../themes/MetroMumbleLight/loading.scss'),
     require('../themes/MetroMumbleLight/main.scss')

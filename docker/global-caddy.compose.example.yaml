@@ -1,0 +1,33 @@
+# Updated ~/lamast/compose.yaml. Keep any additional local settings you have.
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: global-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      LANDING_DOMAIN: ${LANDING_DOMAIN}
+      RU_LANDING_DOMAIN: ${RU_LANDING_DOMAIN}
+      SNIKKET_DOMAIN: ${SNIKKET_DOMAIN}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./site:/srv:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - default
+      - caddy-proxy
+
+networks:
+  caddy-proxy:
+    external: true
+    name: caddy-proxy
+
+volumes:
+  caddy_data:
+  caddy_config:

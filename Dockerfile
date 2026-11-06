@@ -1,35 +1,31 @@
-FROM alpine:edge
-
-LABEL maintainer="Andreas Peters <support@aventer.biz>"
-
-COPY ./ /home/node
-
-RUN echo http://nl.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories && \
-    apk add --no-cache git nodejs npm tini websockify && \
-    adduser -D -g 1001 -u 1001 -h /home/node node && \
-    mkdir -p /home/node && \
-    mkdir -p /home/node/.npm-global && \
-    mkdir -p /home/node/app  && \
-    chown -R node: /home/node 
-
+FROM node:22-bookworm-slim AS build
+RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+RUN chown node:node /app
 USER node
+# Allow pinned Git dependencies to install without an SSH key.
+RUN git config --global url."https://github.com/".insteadOf ssh://git@github.com/ \
+    && git config --global --add url."https://github.com/".insteadOf git@github.com:
+COPY --chown=node:node package.json package-lock.json webpack.config.js ./
+COPY --chown=node:node patches ./patches
+COPY --chown=node:node app ./app
+COPY --chown=node:node loc ./loc
+COPY --chown=node:node themes ./themes
+# postinstall patches codec workers; prepare builds dist.
+RUN npm ci --no-audit --no-fund
 
-ENV PATH=/home/node/.npm-global/bin:$PATH
-ENV NPM_CONFIG_PREFIX=/home/node/.npm-global
-
-RUN cd /home/node && \
-    npm install && \
-    npm run build 
-
-USER root
-
-RUN apk del gcc git
-
-USER node
-
+FROM debian:bookworm-slim AS runtime
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      websockify ca-certificates tini \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --system --uid 10001 --create-home mumble-web
+WORKDIR /app
+COPY --from=build --chown=mumble-web:mumble-web /app/dist ./dist
+COPY docker/configure.py ./configure.py
+COPY --chmod=755 docker/entrypoint.sh /usr/local/bin/mumble-web-entrypoint
+USER mumble-web
 EXPOSE 8080
-ENV MUMBLE_SERVER=mumble.aventer.biz:64738
-
-ENTRYPOINT ["/sbin/tini", "--"]
-CMD websockify --ssl-target --web=/home/node/dist 8080 "$MUMBLE_SERVER"
-
+HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
+  CMD python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/', timeout=3)"
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/mumble-web-entrypoint"]
